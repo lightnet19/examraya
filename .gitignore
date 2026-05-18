@@ -1,0 +1,18 @@
+# Windows system files
+[Dd]esktop.ini
+Thumbs.db
+$RECYCLE.BIN/
+
+# Google Drive sync files
+.gdrive*
+*~gdocpub
+Icon\r
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
