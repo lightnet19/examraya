@@ -124,5 +124,17 @@ Dokumen ini digunakan untuk melacak semua aktivitas pengembangan, perubahan kode
   - `js/app.js`: Mengubah teks placeholder pada input username login dosen/admin.
   - `js/superadmin.js`: Mengubah teks placeholder pada form pendaftaran Dosen baru.
 
+### [18 Mei 2026] - Branding examRAYA, Git Push, & README.md
+- **Tugas Dilakukan:**
+  - Mengubah branding nama aplikasi secara menyeluruh menjadi **examRAYA** (Portal Ujian Secure khusus untuk **STAI Raden Abdullah Yaqin**).
+  - Melakukan inisialisasi repositori Git lokal, membuat `.gitignore` standar, dan melakukan commit awal.
+  - Membuat repositori publik baru bernama **examraya** di akun GitHub `lightnet19` dan men-push seluruh kode sumber ke `main`.
+  - Merancang berkas `.github/workflows/deploy.yml` untuk pendeployan otomatis menggunakan **GitHub Actions** ke **GitHub Pages**.
+  - Menulis berkas **`README.md`** yang sangat komprehensif dan estetis untuk tampilan beranda repositori di GitHub.
+- **File Diubah / Baru:**
+  - `index.html`, `js/app.js`, `js/student.js`: Re-branding tulisan & log menjadi "examRAYA - STAI Raden Abdullah Yaqin".
+  - `.gitignore`, `.github/workflows/deploy.yml`: Konfigurasi filter Git dan otomatisasi pendeployan Pages.
+  - `README.md`: Dokumentasi visual dan teknis terlengkap untuk GitHub.
+
 ---
-*(Proses Pembangunan Inti Portal Ujian Selesai)*
+*(Proses Pembangunan Inti & Publikasi examRAYA Selesai dengan Sempurna)*
