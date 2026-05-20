@@ -21,6 +21,7 @@ Alur kerja fungsionalitas utama **examRAYA** digambarkan melalui diagram berikut
 flowchart TD
     SA[Super Admin Dashboard] -->|CRUD User| U[Manajemen Dosen & Mahasiswa]
     SA -->|Set Kelayakan SPP/Absensi| E[Verifikasi Syarat Ujian Mahasiswa]
+    SA -->|Ekspor/Impor Flat File| SADB[Flat-File Database JSON]
     
     D[Dosen Dashboard] -->|Buat Ujian| B[Input Link Google Form]
     D -->|Generate Token| C[Token untuk Mahasiswa Layak]
@@ -39,30 +40,36 @@ flowchart TD
 
 ## ✨ Fitur Utama
 
-### 🔑 1. Dasbor Super Admin (Manajemen Pusat)
-*   **Manajemen Dosen & Mahasiswa:** Mengelola data dosen dan mahasiswa secara menyeluruh (CRUD terpadu).
-*   **Bulk Import Mahasiswa:** Fitur impor data mahasiswa secara cepat melalui file CSV.
-*   **Status Kelayakan Ujian Global:** Super Admin memegang kendali penuh untuk menentukan apakah seorang mahasiswa *Eligible* (Layak Ujian) berdasarkan pelunasan SPP atau tingkat absensi kuliah.
+### 🎨 1. Premium Cyber Dark Glassmorphism UI (Google Stitch)
+*   **Desain Modern & Responsif**: Antarmuka kelas atas yang megah dengan tema gelap, perpaduan HSL *curated color palettes*, efek kaca transparan (*glassmorphism*), tombol gradien neon, dan mikro-animasi halus untuk memberikan pengalaman pengguna yang sangat premium.
+*   **Geometric Typography**: Memuat tipografi geometric modern `Plus Jakarta Sans` dari Google Fonts untuk memaksimalkan keterbacaan di semua jenis perangkat.
+*   **Tata Letak Pintar**: Pemanfaatan *responsive grid*, sistem pemberitahuan *toast* dinamis, dan popup kode QR lebar interaktif dengan dukungan unduh cetak instan.
 
-### 👨‍🏫 2. Dasbor Dosen (Manajemen Kelas)
-*   **Pembuatan Ujian Terkendali:** Menentukan judul ujian, mata kuliah, jadwal waktu mulai-selesai, dan menautkan URL Google Form ujian.
-*   **Generasi Token Cerdas:** Dosen dapat men-generate kode token unik (`XXXX-XXXX-XXXX`) secara massal. Sistem secara cerdas membatasi generasi token **hanya untuk mahasiswa yang berstatus Layak Ujian (Eligible)** dari database Super Admin.
-*   **Override Akses:** Dosen memiliki otoritas untuk memblokir atau mengizinkan mahasiswa tertentu secara spesifik untuk kelas ujiannya jika ada pengecualian dispensasi mendadak.
-*   **Unduh Token & QR Code:** Ekspor daftar token ke CSV dan unduh QR Code beresolusi tinggi dengan cetakan Kode Ruangan di bawahnya untuk ditampilkan di proyektor kelas.
+### 🔑 2. Dasbor Super Admin (Manajemen Pusat)
+*   **Manajemen Dosen & Mahasiswa**: Mengelola akun dosen (NIDN/Username) dan identitas mahasiswa secara terpusat (CRUD terpadu).
+*   **Status Kelayakan Ujian**: Penanda kelayakan (*Layak* atau *Diblokir*) berdasarkan SPP/Absensi dengan warna status kontras yang mempermudah identifikasi cepat.
+*   **Flat-File Database Manager**: Layanan ekspor-impor mandiri berbasis berkas flat JSON lokal (selengkapnya pada poin 6).
 
-### 📱 3. Akses Ruang Ujian Fleksibel
-*   **QR Code Scanner:** Mahasiswa dapat memindai QR Code di ruang ujian menggunakan kamera handphone (didukung oleh pustaka `html5-qrcode` yang responsif).
-*   **Kode Ruangan 6 Karakter:** Alternatif cepat bagi mahasiswa yang menggunakan laptop agar langsung terhubung ke halaman verifikasi tanpa memindai.
+### 👨‍🏫 3. Dasbor Dosen (Manajemen Kelas)
+*   **Pembuatan Ujian Terkendali**: Membuat ujian baru, menyematkan URL Google Form, dan otomatis memproduksi Kode Ruangan 6-karakter acak.
+*   **Token & QR Code Generator**: Memproduksi token ujian sekali pakai (`XXXX-XXXX-XXXX`) secara otomatis untuk mahasiswa berstatus Layak. Dilengkapi opsi unduhan lembar QR Code beresolusi tinggi.
+*   **Reset & Manajemen Sesi**: Mengawasi sesi ujian aktif, mematikan token yang telah terpakai, dan mereset status token jika terjadi kendala teknis pada mahasiswa.
 
-### 🛡️ 4. Secure Exam Mode & Sistem Proteksi (Anti-Cheat)
-*   **Wajib Fullscreen:** Lembar soal Google Form hanya akan memuat jika browser berada dalam mode Fullscreen penuh. Keluar dari fullscreen akan langsung memblokir tampilan ujian.
-*   **Focus Tracking (Anti Alt-Tab):** Mendeteksi aksi keluar dari jendela browser, berpindah tab, membuka jendela aplikasi lain, atau meminimalisir layar. Layar soal akan langsung di-blur, akses dikunci sementara, dan aksi dicatat otomatis ke log pelanggaran.
-*   **Disable Klik Kanan & Shortcut:** Mematikan fungsi klik kanan (Context Menu) dan kombinasi tombol salin-tempel (`Ctrl+C`, `Ctrl+V`), `Print Screen`, dan tombol developer (`F12`) untuk mencegah penyebaran soal.
-*   **Watermark Dinamis:** Overlay transparan yang memuat `NAMA - NIM` mahasiswa di atas lembar soal untuk mencegah kecurangan dalam bentuk pemotretan layar.
+### 🛡️ 4. Secure Exam Mode & Anti-Cheat System (Diperketat)
+*   **Watermark KTM Diagonal Berulang**: Lapisan watermark transparan berulang (`NAMA - NIM`) di atas iframe lembar soal untuk meminimalisir niat mendistribusikan soal lewat kamera ponsel.
+*   **Enforcement Layar Penuh (Fullscreen)**: Mewajibkan browser berada pada mode layar penuh. Deteksi menonaktifkan layar penuh akan langsung mengunci soal ujian.
+*   **Focus & Visibility Tracking**: Melacak pembukaan tab baru, minimize browser, atau hilangnya fokus jendela. Soal akan langsung diselimuti lapisan blur buram merah menyala bertuliskan **"PELANGGARAN TERDETEKSI"** dan akses dikunci sementara hingga diizinkan kembali oleh pengawas.
+*   **Blokir Klik Kanan & Shortcut**: Memblokir menu klik kanan (`contextmenu`) serta mematikan salin-tempel dan pintasan developer untuk menyulitkan inspeksi kode.
 
-### 📊 5. Pelacakan Akses Real-Time & Ekspor Pelanggaran
-*   Mencatat secara presisi setiap aktivitas siswa yang meliputi: waktu akses, user-agent, metode masuk, hingga detail pelanggaran (misalnya: *Exit Fullscreen*, *Tab Focus Lost*).
-*   Fitur ekspor log aktivitas ujian ke berkas CSV untuk keperluan evaluasi sidang ujian oleh Dosen.
+### 📊 5. Real-Time Security Monitor & Ekspor Laporan
+*   **Monitoring Live**: Dosen dapat memantau secara langsung histori aktivitas mahasiswa mulai dari waktu mulai, selesai, hingga setiap insiden kecurangan secara real-time.
+*   **Ekspor Pelanggaran**: Mengunduh seluruh log pelanggaran terfilter ke format flat CSV untuk evaluasi sidang akademik pasca-ujian.
+
+### 🗂️ 6. Flat-File Database Management (Backup & Restore)
+*   **Mandiri Tanpa Cloud**: Menggunakan `safeStorage` (in-memory & localStorage wrapper) yang memungkinkannya berjalan tanpa ketergantungan database online (Supabase/Firebase) saat fase prototype.
+*   **Ekspor Database (JSON Flat File)**: Fitur mencadangkan seluruh isi sistem (mahasiswa, dosen, ujian, token, dan log keamanan) ke dalam satu file flat `.json` lokal.
+*   **Restorasi Database (JSON Flat File)**: Memulihkan database secara instan di komputer/browser penguji mana pun cukup dengan mengunggah kembali file cadangan `.json`.
+*   **Pintasan Reset Demo**: Tombol pintas untuk memulihkan database tiruan standar secara instan demi kenyamanan presentasi prototype.
 
 ---
 
@@ -70,28 +77,12 @@ flowchart TD
 
 | Komponen | Teknologi | Keterangan |
 |----------|-----------|------------|
-| **Core UI** | Vanilla HTML5 & CSS3 | Tampilan premium dengan gaya *Glassmorphism* modern dan gelap (*Dark Mode*). |
-| **Routing** | Vanilla JS SPA (Hash-based) | Navigasi halaman cepat tanpa reload/refresh browser. |
-| **QR Code** | `html5-qrcode` & `qrcodejs` | Mendukung pembuatan QR Code dinamis dan scan real-time lewat kamera. |
-| **Kriptografi** | CryptoJS (SHA-256) | Mengamankan data token, validasi, dan status keabsahan di sisi klien. |
-| **Icons & Font** | Lucide Icons & Google Fonts | Font *Inter* modern yang sangat terbaca dan ikon SVG tajam. |
-| **Storage Layer**| `safeStorage` Wrapper (Custom) | Wrapper cerdas buatan kami yang mendeteksi ketersediaan `localStorage` dan otomatis beralih ke *In-Memory fallback* jika diblokir oleh browser. |
-
----
-
-## 🔒 Teknologi Unggulan: `safeStorage` Fallback System
-
-Salah satu tantangan terbesar saat meluncurkan aplikasi web statis langsung dari media penyimpanan lokal (protokol `file:///`) adalah kebijakan keamanan browser modern yang memblokir akses ke `localStorage`. Hal ini biasanya menyebabkan aplikasi langsung memicu eror layar hitam total.
-
-**examRAYA** menyelesaikan isu ini dengan menghadirkan **`safeStorage`**:
-```javascript
-// js/utils.js
-window.safeStorage = {
-    // Otomatis menguji ketersediaan localStorage,
-    // jika diblokir keamanan browser, beralih ke RAM Object Store secara transparan.
-};
-```
-Berkat modul ini, **examRAYA** dijamin **100% stabil** dijalankan dari server web online (HTTPS) maupun saat dibuka langsung dengan klik ganda (*double click*) file `index.html` dari folder lokal/Google Drive tanpa memerlukan instalasi server apa pun!
+| **Core UI** | Vanilla HTML5 & CSS3 | Tema *Cyber Dark Glassmorphic* premium yang diselaraskan dengan standar *Google Stitch*. |
+| **Routing** | Vanilla JS SPA (Hash-based) | Navigasi SPA cepat, responsif, dan bebas refresh browser. |
+| **QR Code** | `html5-qrcode` & `qrcodejs` | Generator kode QR instan dan pemindai kamera real-time berlatar kaca dinamis. |
+| **Kriptografi** | CryptoJS (SHA-256) | Mengamankan data token, otentikasi login, dan integritas hash di sisi klien. |
+| **Icons & Font** | Lucide Icons & Google Fonts | Tipografi geometris *Plus Jakarta Sans* dan ikon SVG *lightweight* responsif. |
+| **Storage Layer**| `safeStorage` Wrapper (Custom) | Wrapper cerdas yang mendeteksi ketersediaan `localStorage` dan otomatis beralih ke *In-Memory fallback* secara transparan bila dijalankan langsung dari folder lokal (`file:///`). |
 
 ---
 
@@ -104,18 +95,18 @@ examraya/
 ├── devlog.md                   # Catatan log historis rilis fitur
 ├── implementation_plan.md      # Rencana desain & alur awal
 ├── css/
-│   └── style.css               # Desain Glassmorphism & Token UI
+│   └── style.css               # Desain Glassmorphism Premium, Grid & Custom Styles
 ├── .github/
 │   └── workflows/
 │       └── deploy.yml          # Otomatisasi pendeployan GitHub Pages via Actions
 └── js/
     ├── app.js                  # Engine router, penanganan login & view templates
-    ├── superadmin.js           # Pengelolaan User Dosen, Mahasiswa, & Status SPP
-    ├── dosen.js                # Pengelolaan Ujian, Tracker Kelas, & Ekspor CSV
+    ├── superadmin.js           # Pengelolaan User Dosen, Mahasiswa, & Flat-File Database (JSON)
+    ├── dosen.js                # Pengelolaan Ujian, Tracker Kelas, QR Code Modal & Ekspor CSV
     ├── token.js                # Logika token generator & enkripsi SHA-256
     ├── tracker.js              # Log pencatat aktivitas & cheat detector
-    ├── exam.js                 # Lembar Secure Exam View (Iframe, Fullscreen & Anti-Cheat)
-    └── utils.js                # Enkripsi CryptoJS, safeStorage, & format tanggal
+    ├── exam.js                 # Lembar Secure Exam View (Iframe, Watermark KTM, & Anti-Cheat)
+    └── utils.js                # Enkripsi CryptoJS, safeStorage, format tanggal, & Data Seed Demo
 ```
 
 ---
@@ -137,7 +128,7 @@ examraya/
 ## 🚀 Panduan Deployment (Online)
 
 ### Opsi 1: Otomatis Menggunakan GitHub Pages (Terintegrasi)
-Kami telah menyematkan berkas alur kerja **GitHub Actions** (`deploy.yml`). Aplikasi Anda akan langsung aktif secara publik hanya dalam 3 langkah mudah:
+Kami telah menyematkan alur kerja **GitHub Actions** (`deploy.yml`). Aplikasi Anda akan langsung aktif secara publik hanya dalam 3 langkah mudah:
 1. Masuk ke halaman repositori Anda di GitHub.
 2. Klik tab **Settings** -> **Pages** (di menu sebelah kiri).
 3. Pada bagian **Build and deployment** -> **Source**, ubah opsi pilihan dari *"Deploy from a branch"* menjadi **"GitHub Actions"**.
@@ -154,16 +145,33 @@ Kami telah menyematkan berkas alur kerja **GitHub Actions** (`deploy.yml`). Apli
 
 ---
 
-## 🏛️ Kredensial Default Uji Coba
+## 🏛️ Kredensial Default Uji Coba (Auto-Seeded Prototype)
 
-Untuk keperluan demonstrasi awal, Anda dapat masuk menggunakan akun default berikut:
+Aplikasi ini dilengkapi dengan **Auto-Seeding Engine** saat pertama kali dimuat. Anda dapat langsung menguji fungsionalitas multi-peran menggunakan akun dan data tiruan berikut:
 
+### 🔑 Akun Login Pengguna
 *   **Super Admin:**
     *   *Username:* `admin`
     *   *Password:* `admin123`
-*   **Dosen:**
-    *   *Username:* `dosen` (Dapat ditambah melalui dasbor Super Admin menggunakan **NIDN / NUPTK**)
+*   **Akun Dosen 1:**
+    *   *Username / NIDN:* `dosen1`
     *   *Password:* `dosen123`
+    *   *Nama:* `Dr. Ahmad Yani, M.Pd.`
+*   **Akun Dosen 2:**
+    *   *Username / NIDN:* `dosen2`
+    *   *Password:* `dosen123`
+    *   *Nama:* `Siti Aminah, M.Sc.`
+
+### 🎓 Contoh Data Mahasiswa (Untuk Validasi)
+*   **NIM Layak Ujian (Eligible):**
+    *   `2026001` (Budi Santoso — Teknik Informatika)
+    *   `2026002` (Dewi Lestari — Sistem Informasi)
+*   **NIM Terblokir Ujian (Tidak Layak - Simulasi Keuangan/Absensi):**
+    *   `2026003` (Fahri Hamzah — Pendidikan Agama Islam)
+
+### 🏫 Kode Ruang Ujian Pra-Dibuat
+*   `MTK101` — UTS Matematika Diskrit (Pengampu: Dr. Ahmad Yani, M.Pd.)
+*   `IND202` — UAS Bahasa Indonesia (Pengampu: Siti Aminah, M.Sc.)
 
 ---
 
