@@ -20,6 +20,10 @@ const SuperAdmin = {
                     <i data-lucide="graduation-cap" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 6px;"></i>
                     Kelola Mahasiswa
                 </button>
+                <button class="tab-btn" id="tab-btn-database" onclick="SuperAdmin.showTab('database')">
+                    <i data-lucide="database" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 6px;"></i>
+                    Flat-File Database
+                </button>
             </div>
             
             <div id="sa-tab-content" class="tab-content active"></div>
@@ -36,19 +40,24 @@ const SuperAdmin = {
         // Update active tab buttons visual
         const btnDosen = document.getElementById('tab-btn-dosen');
         const btnMhs = document.getElementById('tab-btn-mahasiswa');
+        const btnDB = document.getElementById('tab-btn-database');
+        
+        if (btnDosen) btnDosen.classList.remove('active');
+        if (btnMhs) btnMhs.classList.remove('active');
+        if (btnDB) btnDB.classList.remove('active');
         
         if (tab === 'dosen') {
             if(btnDosen) btnDosen.classList.add('active');
-            if(btnMhs) btnMhs.classList.remove('active');
-            
             content.innerHTML = this.views.dosen();
             this.loadDosenList();
         } else if (tab === 'mahasiswa') {
-            if(btnDosen) btnDosen.classList.remove('active');
             if(btnMhs) btnMhs.classList.add('active');
-            
             content.innerHTML = this.views.mahasiswa();
             this.loadMahasiswaList();
+        } else if (tab === 'database') {
+            if(btnDB) btnDB.classList.add('active');
+            content.innerHTML = this.views.database();
+            this.loadDatabaseStats();
         }
 
         // Recreate icons
@@ -170,6 +179,79 @@ const SuperAdmin = {
                                     <tr><td colspan="4" class="text-center text-muted">Memuat data...</td></tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        },
+        database() {
+            return `
+                <div class="grid-2">
+                    <!-- Left Panel: Flat File Controls -->
+                    <div style="background: var(--bg-inner); border: 1px solid var(--border-glass); border-radius: 12px; padding: 24px;">
+                        <h4 style="margin-bottom: 6px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="file-json" style="width: 18px; height: 18px; color: var(--primary);"></i>
+                            Ekspor & Impor Database (JSON)
+                        </h4>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 24px;">
+                            Simpan data prototype dalam format flat file (.json) lokal. Data dapat dipulihkan atau dipindahkan ke perangkat lain dengan mudah.
+                        </p>
+                        
+                        <!-- Backup / Export Section -->
+                        <div style="margin-bottom: 28px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                            <h5 style="margin-bottom: 8px; font-weight: 600; color: #fff; font-size: 0.9rem;">1. Unduh Flat-File Database</h5>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px;">Unduh semua data (Mahasiswa, Dosen, Ujian, dan Log Pelanggaran) ke file JSON tunggal.</p>
+                            <button class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="DB.exportDatabase()">
+                                <i data-lucide="download" style="width: 16px; height: 16px;"></i> Ekspor Ke File JSON
+                            </button>
+                        </div>
+                        
+                        <!-- Restore / Import Section -->
+                        <div style="margin-bottom: 12px;">
+                            <h5 style="margin-bottom: 8px; font-weight: 600; color: #fff; font-size: 0.9rem;">2. Pulihkan Dari Flat-File Database</h5>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px;">Unggah file JSON backup examRAYA untuk menimpa data saat ini.</p>
+                            
+                            <div class="form-group" style="margin-bottom: 16px;">
+                                <label class="form-label" style="display: inline-block; cursor: pointer; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; padding: 16px; width: 100%; text-align: center; color: var(--text-muted); font-size: 0.8rem;" id="sa-db-upload-label">
+                                    <i data-lucide="upload-cloud" style="width: 20px; height: 20px; margin: 0 auto 6px; display: block; color: var(--text-muted);"></i>
+                                    <span>Pilih file .json database...</span>
+                                    <input type="file" id="sa-db-file" accept=".json" style="display: none;" onchange="SuperAdmin.handleDatabaseFileSelect(this)">
+                                </label>
+                            </div>
+                            
+                            <button class="btn btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="SuperAdmin.restoreDatabase()">
+                                <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i> Pulihkan Data Sekarang
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Panel: Database Status & Prototype Control -->
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <!-- Mock Database Info -->
+                        <div style="background: var(--bg-inner); border: 1px solid var(--border-glass); border-radius: 12px; padding: 24px;">
+                            <h4 style="margin-bottom: 6px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                                <i data-lucide="bar-chart-2" style="width: 18px; height: 18px; color: var(--secondary);"></i>
+                                Ringkasan Database Lokal
+                            </h4>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px;">Data saat ini disimpan dalam sandbox safeStorage browser.</p>
+                            
+                            <div id="sa-db-stats" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                                <!-- Loaded via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Reset & Prototype Seeding -->
+                        <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: 12px; padding: 24px;">
+                            <h4 style="margin-bottom: 6px; font-weight: 700; display: flex; align-items: center; gap: 8px; color: #f87171;">
+                                <i data-lucide="alert-triangle" style="width: 18px; height: 18px; color: #f87171;"></i>
+                                Reset & Seed Data Demo
+                            </h4>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px;">
+                                Sangat berguna untuk pengujian prototype. Menghapus data saat ini dan mengisi ulang dengan data dosen, mahasiswa, ujian, dan log pelanggaran contoh.
+                            </p>
+                            <button class="btn btn-outline" style="width: 100%; border-color: rgba(239, 68, 68, 0.3); color: #f87171;" onclick="SuperAdmin.resetAndSeedDemo()">
+                                <i data-lucide="rotate-ccw" style="width: 16px; height: 16px;"></i> Muat Ulang Data Demo Prototype
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -308,6 +390,81 @@ const SuperAdmin = {
             DB.delete('db_mahasiswa', 'id', id);
             App.showToast("Data Mahasiswa telah dihapus", "info");
             this.loadMahasiswaList();
+        }
+    },
+
+    loadDatabaseStats() {
+        const statsContainer = document.getElementById('sa-db-stats');
+        if (!statsContainer) return;
+
+        const users = DB.get('db_users');
+        const dosenCount = users.filter(u => u.role === 'dosen').length;
+        const adminCount = users.filter(u => u.role === 'superadmin').length;
+        const mhsCount = DB.get('db_mahasiswa').length;
+        const examCount = DB.get('db_exams').length;
+        const logCount = DB.get('db_logs').length;
+
+        statsContainer.innerHTML = `
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Akun Dosen / Admin</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-top: 4px;">${dosenCount} <span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">/ ${adminCount}</span></div>
+            </div>
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Data Mahasiswa</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--secondary); margin-top: 4px;">${mhsCount}</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Ruang Ujian</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #34d399; margin-top: 4px;">${examCount}</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Log Pelanggaran</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #f87171; margin-top: 4px;">${logCount}</div>
+            </div>
+        `;
+    },
+
+    handleDatabaseFileSelect(input) {
+        const file = input.files[0];
+        const label = document.getElementById('sa-db-upload-label');
+        if (file && label) {
+            label.querySelector('span').innerText = file.name;
+            label.style.borderColor = 'var(--primary)';
+            label.style.color = '#ffffff';
+        }
+    },
+
+    restoreDatabase() {
+        const fileInput = document.getElementById('sa-db-file');
+        if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+            App.showToast("Silakan pilih file JSON database terlebih dahulu", "warning");
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const contents = e.target.result;
+            const res = DB.restoreDatabase(contents);
+            if (res.success) {
+                App.showToast(res.message, "success");
+                setTimeout(() => {
+                    location.reload(); // Refresh app to load restored database state
+                }, 1000);
+            } else {
+                App.showToast(res.message, "error");
+            }
+        };
+        reader.readAsText(file);
+    },
+
+    resetAndSeedDemo() {
+        if (confirm("Perhatian! Tindakan ini akan menghapus database saat ini dan mengisi ulang dengan data contoh prototype. Apakah Anda yakin?")) {
+            DB.seedMockData();
+            App.showToast("Database berhasil di-reset ke data demo prototype!", "success");
+            setTimeout(() => {
+                location.reload(); // Refresh to re-initialize UI with new mock data
+            }, 1000);
         }
     }
 };
