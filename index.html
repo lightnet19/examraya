@@ -5,26 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>examRAYA - STAI Raden Abdullah Yaqin</title>
     
-    <!-- Google Fonts: Inter -->
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Portal Ujian Secure dengan QR Code & Token Verification - STAI Raden Abdullah Yaqin">
+    <meta name="author" content="STAI Raden Abdullah Yaqin">
+    
+    <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- External Libs -->
-    <!-- QRCode.js -->
+    <!-- External Libraries via CDN -->
+    <!-- QRCode.js for Dosen QR Generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <!-- HTML5 QRCode Scanner -->
+    <!-- HTML5 QRCode Scanner for Student QR Scanning -->
     <script src="https://unpkg.com/html5-qrcode"></script>
-    <!-- CryptoJS -->
+    <!-- CryptoJS for secure hashing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <!-- Lucide Icons -->
+    <!-- Lucide Icons for Premium UI Visuals -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- Custom CSS -->
+    <!-- Custom Design System Stylesheet -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div id="app">
+    <div id="app" class="app-root">
         <!-- SPA View Container -->
         <main id="view-container"></main>
     </div>
@@ -32,7 +36,7 @@
     <!-- Toast Notification Container -->
     <div id="toast-container" class="toast-container"></div>
 
-    <!-- Application Scripts -->
+    <!-- Application Components & Router -->
     <script src="js/utils.js"></script>
     <script src="js/token.js"></script>
     <script src="js/tracker.js"></script>

@@ -1,5 +1,4 @@
 // js/exam.js - Secure Exam Mode Logic
-
 const Exam = {
     state: {
         session: null,
@@ -8,6 +7,8 @@ const Exam = {
         violationCount: 0,
         startTime: null
     },
+
+    timerInterval: null,
 
     init() {
         const sessionStr = safeStorage.getItem('active_exam_session');
@@ -33,6 +34,11 @@ const Exam = {
             return;
         }
 
+        // Reset state
+        this.state.violationCount = 0;
+        this.state.isFullscreen = false;
+        this.state.startTime = null;
+
         this.renderPreExamUI();
     },
 
@@ -41,32 +47,53 @@ const Exam = {
         if (!container) return;
 
         container.innerHTML = `
-            <div class="flex-center" style="min-height: 100vh; padding: 20px; background: var(--bg-color);">
-                <div class="glass-panel text-center" style="max-width: 600px; width: 100%;">
-                    <i data-lucide="shield-alert" style="width: 64px; height: 64px; color: var(--warning); margin-bottom: 1rem;"></i>
-                    <h2>Persiapan Ujian</h2>
-                    <h3 class="mt-2 text-primary">${this.state.examData.mataKuliah}</h3>
+            <div class="flex-center" style="min-height: 100vh; padding: 24px; position: relative; background: var(--bg-main);">
+                <!-- Ambient Light Blobs -->
+                <div style="position: absolute; width: 300px; height: 300px; background: rgba(0, 212, 255, 0.08); filter: blur(80px); top: 15%; left: 10%; pointer-events: none;"></div>
+                <div style="position: absolute; width: 300px; height: 300px; background: rgba(124, 58, 237, 0.08); filter: blur(80px); bottom: 15%; right: 10%; pointer-events: none;"></div>
+
+                <div class="glass-panel text-center" style="max-width: 580px; width: 100%; position: relative; border-color: rgba(0, 212, 255, 0.2); box-shadow: 0 0 30px rgba(0, 212, 255, 0.1);">
+                    <div style="display: inline-flex; width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(124, 58, 237, 0.15)); align-items: center; justify-content: center; margin-bottom: 20px; border: 1px solid var(--border-glass-active);">
+                        <i data-lucide="shield-alert" style="width: 32px; height: 32px; color: var(--primary);"></i>
+                    </div>
                     
-                    <div class="mt-4 text-left" style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px;">
-                        <h4 style="margin-bottom: 10px;">Aturan Secure Exam:</h4>
-                        <ul style="font-size: 0.9rem; color: #ddd; padding-left: 20px;">
+                    <h2 style="font-weight: 800; margin-bottom: 4px;">Persiapan Ujian Secure</h2>
+                    <p style="font-size: 0.8rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 20px;">STAI Raden Abdullah Yaqin</p>
+                    
+                    <div style="background: rgba(13, 17, 33, 0.6); border: 1px solid rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; text-align: left; margin-bottom: 24px;">
+                        <div style="font-weight: bold; color: #ffffff; font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="book-open" style="width: 18px; height: 18px; color: var(--primary);"></i>
+                            Informasi Ujian:
+                        </div>
+                        <div style="display: grid; grid-template-columns: 110px 1fr; gap: 8px; font-size: 0.9rem; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">
+                            <span style="color: var(--text-muted);">Mata Kuliah:</span>
+                            <strong style="color: #ffffff;">${this.state.examData.mataKuliah}</strong>
+                            <span style="color: var(--text-muted);">Mahasiswa:</span>
+                            <span style="color: #ffffff;">${this.state.session.nama} (${this.state.session.nim})</span>
+                        </div>
+                        
+                        <div style="font-weight: bold; color: #ffffff; font-size: 0.9rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="shield-check" style="width: 18px; height: 18px; color: var(--success);"></i>
+                            Aturan Secure Exam:
+                        </div>
+                        <ul style="font-size: 0.85rem; color: var(--text-muted); padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
                             <li>Ujian wajib dikerjakan dalam mode <strong>Layar Penuh (Fullscreen)</strong>.</li>
                             <li>Dilarang berpindah tab, membuka aplikasi lain, atau meminimalisir browser.</li>
-                            <li>Dilarang menggunakan klik kanan (Copy/Paste).</li>
-                            <li>Setiap pelanggaran akan <strong>tercatat di sistem</strong> dan dilaporkan ke dosen pengawas.</li>
+                            <li>Dilarang menggunakan klik kanan (Copy/Paste/Inspect).</li>
+                            <li>Setiap tindakan mencurigakan akan <strong>tercatat di log keamanan</strong> pengawas secara real-time.</li>
                         </ul>
                     </div>
 
-                    <div class="mt-4" style="background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 1.2rem;">
-                        TOKEN UJIAN ANDA:<br>
-                        <strong style="color: var(--secondary); font-size: 1.5rem; letter-spacing: 2px;">${this.state.session.token}</strong>
+                    <div style="background: linear-gradient(135deg, rgba(0, 212, 255, 0.05), rgba(124, 58, 237, 0.05)); border: 1px dashed var(--border-glass-active); padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Secure Token Validated</span>
+                        <strong style="font-family: monospace; color: var(--primary); font-size: 1.6rem; letter-spacing: 4px; text-shadow: 0 0 10px rgba(0,212,255,0.3);">${this.state.session.token}</strong>
                     </div>
                     
-                    <button class="btn btn-primary mt-4" style="width: 100%; font-size: 1.1rem; padding: 15px;" onclick="Exam.startExam()">
-                        <i data-lucide="maximize" style="width: 20px; height: 20px; margin-right: 8px;"></i> Mulai Ujian & Masuk Layar Penuh
+                    <button class="btn btn-primary" style="width: 100%; padding: 14px 20px; font-size: 1rem; border-radius: 12px;" onclick="Exam.startExam()">
+                        <i data-lucide="maximize" style="width: 18px; height: 18px;"></i> Mulai Ujian & Masuk Layar Penuh
                     </button>
                     
-                    <button class="btn btn-outline mt-3" style="width: 100%; border: none;" onclick="Exam.cancelExam()">
+                    <button class="btn btn-outline" style="width: 100%; border: 1px solid transparent; background: transparent; margin-top: 12px; color: var(--text-muted);" onclick="Exam.cancelExam()">
                         Batal & Keluar
                     </button>
                 </div>
@@ -88,15 +115,12 @@ const Exam = {
             elem.msRequestFullscreen();
         }
 
-        // We wait for fullscreenchange event to actually render the exam
-        // Because if the user denies it, we shouldn't show the exam
-        
         // Log exam start
         this.logAction('EXAM_START', 'Mahasiswa memulai ujian');
         this.state.startTime = new Date().getTime();
         this.bindSecurityEvents();
 
-        // Fallback if fullscreen API is not fully supported or delayed
+        // Fallback if fullscreen API is delayed
         setTimeout(() => {
             this.renderActiveExamUI();
         }, 500);
@@ -106,45 +130,103 @@ const Exam = {
         const container = document.getElementById('exam-container');
         if (!container) return;
 
+        const watermarkItems = Array(16).fill(`<div class="watermark-item">${this.state.session.nim} - ${this.state.session.nama}</div>`).join('');
+
         container.innerHTML = `
-            <div style="display: flex; flex-direction: column; height: 100vh; width: 100vw; overflow: hidden; background: #fff;">
+            <style>
+                @keyframes pulse-glow {
+                    0% { transform: scale(0.95); opacity: 0.4; }
+                    50% { transform: scale(1.3); opacity: 0.8; }
+                    100% { transform: scale(0.95); opacity: 0.4; }
+                }
+                .border-danger {
+                    border-color: rgba(244, 63, 94, 0.3) !important;
+                    box-shadow: 0 0 30px rgba(244, 63, 94, 0.15) !important;
+                }
+            </style>
+
+            <div style="display: flex; flex-direction: column; height: 100vh; width: 100vw; overflow: hidden; background: var(--bg-main);">
                 <!-- Secure Header -->
-                <div style="background: var(--surface); color: var(--text-color); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <i data-lucide="shield" style="color: var(--primary);"></i>
+                <header class="exam-header">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="display: flex; width: 38px; height: 38px; border-radius: 8px; background: rgba(0, 212, 255, 0.1); border: 1px solid var(--border-glass-active); align-items: center; justify-content: center;">
+                            <i data-lucide="shield" style="width: 20px; height: 20px; color: var(--primary);"></i>
+                        </div>
                         <div>
-                            <div style="font-weight: bold;">${this.state.examData.mataKuliah}</div>
-                            <div style="font-size: 0.8rem; opacity: 0.8;">${this.state.session.nama} (${this.state.session.nim})</div>
+                            <div style="font-weight: 800; font-size: 0.95rem; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+                                ${this.state.examData.mataKuliah}
+                                <span class="badge badge-primary" style="font-size: 0.65rem; padding: 2px 6px; text-transform: uppercase;">Secure Mode</span>
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">
+                                ${this.state.session.nama} &bull; NIM: ${this.state.session.nim}
+                            </div>
                         </div>
                     </div>
                     
-                    <div style="text-align: center; background: rgba(0,0,0,0.2); padding: 5px 15px; border-radius: 20px;">
-                        <span style="font-size: 0.8rem; opacity: 0.8;">Token:</span>
-                        <strong style="font-family: monospace; letter-spacing: 1px; color: var(--secondary); margin-left: 5px;">${this.state.session.token}</strong>
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <!-- Token Badge -->
+                        <div style="text-align: center; background: rgba(5, 7, 16, 0.6); border: 1px solid var(--border-glass); padding: 6px 14px; border-radius: 20px; display: flex; align-items: center; gap: 6px;">
+                            <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Token:</span>
+                            <strong style="font-family: monospace; letter-spacing: 1px; color: var(--secondary); font-size: 0.9rem;">${this.state.session.token}</strong>
+                        </div>
+
+                        <!-- Timer Tracker -->
+                        <div style="background: rgba(5, 7, 16, 0.6); border: 1px solid var(--border-glass); padding: 6px 14px; border-radius: 20px; display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="clock" style="width: 14px; height: 14px; color: var(--primary);"></i>
+                            <span id="exam-timer" style="font-family: monospace; font-size: 0.9rem; font-weight: bold; color: #ffffff; min-width: 60px; text-align: center;">00:00:00</span>
+                        </div>
+
+                        <button class="btn btn-outline" style="padding: 6px 14px; font-size: 0.8rem; border-color: rgba(244, 63, 94, 0.2); color: #fb7185;" onclick="Exam.finishExam()">
+                            <i data-lucide="log-out" style="width: 14px; height: 14px;"></i> Selesai Ujian
+                        </button>
                     </div>
+                </header>
 
-                    <button class="btn btn-outline" style="padding: 5px 15px; font-size: 0.9rem;" onclick="Exam.finishExam()">
-                        Selesai Ujian
-                    </button>
-                </div>
-
-                <!-- Google Form iFrame -->
-                <div style="flex: 1; position: relative;">
+                <!-- Google Form iFrame and Secure Overlay / Watermarks -->
+                <div id="exam-frame-wrapper" class="exam-frame-wrapper">
                     <iframe src="${this.state.examData.formLink}" style="width: 100%; height: 100%; border: none;" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
                     
+                    <!-- Secure Watermarks -->
+                    <div class="secure-watermark">
+                        ${watermarkItems}
+                    </div>
+
                     <!-- Fullscreen Overlay Warning (Hidden by default) -->
-                    <div id="violation-overlay" class="flex-center" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; color: white; flex-direction: column; text-align: center; padding: 20px;">
-                        <i data-lucide="alert-triangle" style="width: 80px; height: 80px; color: var(--danger); margin-bottom: 20px;"></i>
-                        <h1 style="color: var(--danger);">PELANGGARAN TERDETEKSI</h1>
-                        <p style="font-size: 1.2rem; max-width: 600px; margin: 20px auto;">Anda telah keluar dari mode layar penuh atau berpindah aplikasi. Aktivitas ini telah <strong>dicatat dalam sistem log keamanan</strong>.</p>
-                        <button class="btn btn-primary" style="padding: 15px 30px; font-size: 1.2rem; margin-top: 20px;" onclick="Exam.resumeFullscreen()">
-                            Kembali ke Layar Penuh
-                        </button>
+                    <div id="violation-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 7, 18, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 9999; color: white; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; transition: all 0.3s ease;">
+                        <div style="max-width: 550px; width: 100%;" class="glass-panel border-danger">
+                            <div class="flex-center" style="position: relative; margin-bottom: 24px;">
+                                <div class="pulsing-glow" style="position: absolute; width: 80px; height: 80px; background: rgba(244, 63, 94, 0.3); border-radius: 50%; filter: blur(15px); animation: pulse-glow 2s infinite;"></div>
+                                <i data-lucide="shield-alert" style="width: 72px; height: 72px; color: var(--danger); z-index: 1;"></i>
+                            </div>
+                            <h1 style="color: var(--danger); font-weight: 800; font-size: 1.8rem; margin-bottom: 8px; text-shadow: 0 0 15px rgba(244,63,94,0.3);">PELANGGARAN TERDETEKSI</h1>
+                            <p style="font-size: 0.8rem; font-weight: 700; color: var(--danger); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px;">Sistem Keamanan Aktif</p>
+                            <p style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 24px; line-height: 1.5;">
+                                Anda telah keluar dari mode layar penuh (Fullscreen) atau berpindah aplikasi/tab. Aktivitas mencurigakan ini telah <strong>dicatat di log keamanan server</strong> secara real-time.
+                            </p>
+                            <button class="btn btn-primary" style="width: 100%; padding: 14px 20px; font-size: 1rem;" onclick="Exam.resumeFullscreen()">
+                                <i data-lucide="maximize" style="width: 18px; height: 18px;"></i> Kembali ke Layar Penuh
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
+
         if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        // Start Live Timer Interval
+        if (this.timerInterval) clearInterval(this.timerInterval);
+        this.timerInterval = setInterval(() => {
+            const now = new Date().getTime();
+            const diff = now - Exam.state.startTime;
+            const hrs = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const secs = Math.floor((diff % (1000 * 60)) / 1000);
+            const timerElem = document.getElementById('exam-timer');
+            if (timerElem) {
+                timerElem.innerText = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+        }, 1000);
     },
 
     bindSecurityEvents() {
@@ -174,9 +256,13 @@ const Exam = {
 
         document.removeEventListener('visibilitychange', this.handleVisibilityChange);
         window.removeEventListener('blur', this.handleWindowBlur);
+
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
     },
 
-    // Event Handlers (Need to be arrow functions or bound to keep 'this' context)
     handleContextMenu: (e) => {
         e.preventDefault();
         App.showToast("Klik kanan dinonaktifkan demi keamanan.", "warning");
@@ -185,15 +271,18 @@ const Exam = {
     handleFullscreenChange: () => {
         const isFull = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
         const overlay = document.getElementById('violation-overlay');
+        const wrapper = document.getElementById('exam-frame-wrapper');
         
         if (!isFull) {
             Exam.state.isFullscreen = false;
             if (overlay) overlay.style.display = 'flex';
+            if (wrapper) wrapper.classList.add('security-alert');
             Exam.state.violationCount++;
             Exam.logAction('EXIT_FULLSCREEN', 'Mahasiswa keluar dari mode layar penuh');
         } else {
             Exam.state.isFullscreen = true;
             if (overlay) overlay.style.display = 'none';
+            if (wrapper) wrapper.classList.remove('security-alert');
         }
     },
 
@@ -202,18 +291,19 @@ const Exam = {
             Exam.state.violationCount++;
             Exam.logAction('TAB_SWITCH', 'Mahasiswa berpindah tab atau meminimalisir browser');
             
-            // If they are not in fullscreen anymore, the fullscreen event will also fire
-            // but if they just switched tabs while in fullscreen (e.g. alt-tab), we force show overlay
             const overlay = document.getElementById('violation-overlay');
+            const wrapper = document.getElementById('exam-frame-wrapper');
             if (overlay) overlay.style.display = 'flex';
+            if (wrapper) wrapper.classList.add('security-alert');
             
-            // Attempt to exit fullscreen so they have to manually re-enter
-            if(document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+            // Attempt to exit fullscreen so they have to manually re-enter and trigger overlay
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            }
         }
     },
 
     handleWindowBlur: () => {
-        // Less strict than visibilityChange, but still a potential cheat
         Exam.state.violationCount++;
         Exam.logAction('WINDOW_BLUR', 'Jendela browser kehilangan fokus');
     },
@@ -230,7 +320,7 @@ const Exam = {
     },
 
     logAction(action, description) {
-        const logs = DB.get('db_logs');
+        const logs = DB.get('db_logs') || [];
         logs.push({
             id: Utils.generateId(),
             examId: this.state.session.examId,
@@ -244,18 +334,18 @@ const Exam = {
     },
 
     finishExam() {
-        if(confirm("Apakah Anda yakin telah selesai mengerjakan ujian? Aksi ini akan mengakhiri sesi Anda.")) {
+        if (confirm("Apakah Anda yakin telah selesai mengerjakan ujian? Aksi ini akan mengakhiri sesi Anda.")) {
             this.logAction('EXAM_FINISH', `Mahasiswa menyelesaikan ujian dengan ${this.state.violationCount} pelanggaran.`);
             this.unbindSecurityEvents();
             
-            if(document.exitFullscreen && (document.fullscreenElement || document.webkitFullscreenElement)) {
-                document.exitFullscreen().catch(()=>{});
+            if (document.exitFullscreen && (document.fullscreenElement || document.webkitFullscreenElement)) {
+                document.exitFullscreen().catch(() => {});
             }
 
             // Mark token as used
-            const tokens = DB.get('db_tokens');
+            const tokens = DB.get('db_tokens') || [];
             const tokenObj = tokens.find(t => t.token === this.state.session.token);
-            if(tokenObj) {
+            if (tokenObj) {
                 tokenObj.status = 'used';
                 tokenObj.usedAt = new Date().toISOString();
                 DB.set('db_tokens', tokens);
@@ -268,6 +358,7 @@ const Exam = {
     },
 
     cancelExam() {
+        this.unbindSecurityEvents();
         safeStorage.removeItem('active_exam_session');
         App.navigate('home');
     }
